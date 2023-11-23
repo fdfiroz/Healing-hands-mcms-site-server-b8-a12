@@ -1,0 +1,33 @@
+{
+  "name": "b8a12-server-side-fdfiroz_category_0016",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node index.js",
+    "dev": "node --watch index.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/programming-hero-web-course1/b8a12-server-side-fdfiroz.git"
+  },
+  "keywords": [
+    "MCMS"
+  ],
+  "author": "Firoz Ahammad",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/programming-hero-web-course1/b8a12-server-side-fdfiroz/issues"
+  },
+  "homepage": "https://github.com/programming-hero-web-course1/b8a12-server-side-fdfiroz#readme",
+  "dependencies": {
+    "cookie-parser": "^1.4.6",
+    "cors": "^2.8.5",
+    "dotenv": "^16.3.1",
+    "express": "^4.18.2",
+    "jsonwebtoken": "^9.0.2",
+    "mongodb": "^6.3.0",
+    "morgan": "^1.10.0"
+  }
+}
