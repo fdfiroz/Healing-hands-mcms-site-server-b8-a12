@@ -84,6 +84,86 @@ app.post("/api/v1/auth/logout", async (req, res) => {
   }
 });
 
+//Camp related API
+
+// Filtering API Format
+//http://Localhost:5000/api/v1/camps  situation 1
+//http://localhost:5000/api/v1/camps?specialServices=General-Health-Checkups  situation2
+//http:///Localhost:5000/ap1/v1/camps?sortField=dateCreated&sortOrder=desc
+//http://localhost:5000/api/v1/camps?search=home  Search API Format
+app.get("/api/v1/camps", async (req, res) => {
+  try{
+    let queryObj = {};
+    let sortObj = {};
+    const specialServices = req.query.specialServices;
+    const search = req.query.search;
+    const sortField = req.query.sortField;
+    const sortOrder = req.query.sortOrder;
+    if (specialServices) {
+      queryObj.specialServices = specialServices;
+    }
+    if (search) {
+      queryObj.title = new RegExp(search, "i");
+    }
+    if (sortField && sortOrder) {
+      sortObj[sortField] = sortOrder;
+    }
+    const courser =  campCollection.find(queryObj).sort(sortObj);
+    const result = await courser.toArray();
+    res.send(result);
+  }
+  catch(error){
+    console.log(error)
+  }
+});
+app.get("/api/v1/camps/:id", async (req, res) => {
+  try{
+    const id = req.params.id;
+    console.log(id)
+    const result = await campCollection.findOne({ _id: new ObjectId(id) });
+    res.send(result);
+  }
+  catch(error){
+    console.log(error)
+  }
+});
+app.post("/api/v1/add-camps", async (req, res) => {
+  try{
+    const camp = req.body;
+    const result = await campCollection.insertOne(camp);
+    res.send(result);
+  }
+  catch(error){
+    console.log(error)
+  }
+});
+app.delete("/api/v1/delete-camp/:id", async (req, res) => {
+  try{
+    const id = req.params.id;
+    const result = await campCollection.deleteOne({ _id: ObjectId(id) });
+    res.send(result);
+  }
+  catch(error){
+    console.log(error)
+  }
+});
+
+app.put("/api/v1/update-camp/:id", async (req, res) => {
+  try{
+    const id = req.params.id;
+    const camp = req.body;
+    const result = await campCollection.updateOne(
+      { _id: ObjectId(id) },
+      { $set: camp }
+    );
+    res.send(result);
+  }
+  catch(error){
+    console.log(error)
+  }
+});
+
+// User related API
 app.post("/api/v1/users", async (req, res) =>{
   const user = req.body;
   console.log(user)
@@ -95,7 +175,7 @@ app.get("/api/v1/users/role/:email", async (req, res) => {
 try{
   const email = req.params.email
   const result = await userCollection.findOne({email})
-  res.send(result.role)
+  res.send(result)
 }
 catch(error){
   console.log(error)
