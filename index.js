@@ -56,6 +56,7 @@ const database = client.db("mcms");
 const userCollection = database.collection("userCollection");
 const campCollection = database.collection("campCollection");
 const paymentCollection = database.collection("paymentCollection");
+const registerCampCollection = database.collection("registerCampCollection");
 
   
 
@@ -166,6 +167,18 @@ app.put("/api/v1/update-camp/:id", async (req, res) => {
   }
 });
 
+//Register Camp related API
+app.post("/api/v1/register-camp", async (req, res) => {
+  try{
+    const registerCamp = req.body;
+    const result = await registerCampCollection.insertOne(registerCamp);
+    res.send(result);
+  }
+  catch(error){
+    console.log(error)
+  }
+});
+
 // User related API
 app.post("/api/v1/users", async (req, res) =>{
   const user = req.body;
@@ -219,11 +232,15 @@ app.post("/api/v1/save-payment", async (req,res)=>{
 //Show all payment info by user email
 app.get("/api/v1/payment/:email", async (req, res)=>{
   try{
-    const email = req.params.email
-    const result = await paymentCollection.find({email})
+    const payerEmail = req.params.email
+    const result = paymentCollection.find({email})
     const data = await result.toArray();
     res.send(data)
-  })
+  }
+  catch(error){
+    console.log(error)
+  }
+})
 //Update popular camp count
 app.patch("/api/v1/popular-count/:id", async (req, res)=>{
   const id = req.params.id;
