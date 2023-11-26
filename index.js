@@ -131,6 +131,39 @@ app.get("/api/v1/camps/:id", async (req, res) => {
     console.log(error)
   }
 });
+
+app.patch('/api/v1/status-change/:id', async (req, res) => {
+  try {
+    const id = req.params.id;
+    const paymentStatus = req.body.paymentStatus;
+    const registerStatus = req.body.registerStatus;
+    const transactionId = req.body.transactionId;
+    console.log(id, paymentStatus, registerStatus, transactionId)
+    const result = await registerCampCollection.updateOne(
+      { _id: new ObjectId(id) }, 
+      { $set: { paymentStatus: paymentStatus, registerStatus: registerStatus, transactionId: transactionId } }
+    );
+    res.send(result);
+  } catch (error) {
+    console.log(error);
+  }
+});
+//Cancel register and registerStatus change to Canceled
+app.patch('/api/v1/cancel-register/:id', async (req, res) => {
+  try {
+    const id = req.params.id;
+    const registerStatus = req.body.registerStatus;
+    const result = await registerCampCollection.updateOne(
+      { _id: new ObjectId(id) }, 
+      { $set: { registerStatus: registerStatus } }
+    );
+    res.send(result);
+  } catch (error) {
+    console.log(error);
+  }
+});
+
+
 app.post("/api/v1/add-camps", async (req, res) => {
   try{
     const camp = req.body;
@@ -178,6 +211,44 @@ app.post("/api/v1/register-camp", async (req, res) => {
     console.log(error)
   }
 });
+app.get("/api/v1/register-camps/:email", async (req, res) => {
+  try{
+    const email = req.params.email;
+    const result =  registerCampCollection.find({ registerEmail: email });
+    const data = await result.toArray();
+    res.send(data);
+  }
+  catch(error){
+    console.log(error)
+  }
+});
+app.get("/api/v1/register-camp:id", async (req, res) => {
+  try{
+    console.log(req)
+    const id = req.params.id;
+    const result = await registerCampCollection.findOne({ _id: new ObjectId(id) });
+    res.send(id);
+  }
+  catch(error){
+    console.log(error)
+  }
+});
+app.delete("/api/v1/delete-register-camp/:id", async(req, res) => {
+  try{
+    const id = req.params.id;
+    const result = await registerCampCollection.deleteOne({ _id: ObjectId(id) });
+    res.send(result);
+  }
+  catch(error){
+    console.log(error)
+  }
+});
+
+//find all register camp by registerEmail or orgId
+
+
+
+
 
 // User related API
 app.post("/api/v1/users", async (req, res) =>{
