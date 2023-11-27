@@ -88,6 +88,48 @@ app.post("/api/v1/auth/logout", async (req, res) => {
     console.log(error)
   }
 });
+const verify = async (req, res, next) => {
+  const token = req.cookies?.token;
+  // console.log(token);
+  if (!token) {
+    return res.status(401).send({ message: "unauthorized access" });
+  }
+  jwt.verify(token, process.env.ACCESS_TOKEN, (err, decoded) => {
+    if (err) {
+      return res.status(401).send({ message: "unauthorized access" });
+    }
+    req.user = decoded;
+    next();
+  });
+};
+
+const verifyParticipants = async (req, res, next) => {
+  const user = req.user
+  console.log('user from verify Participants', user)
+  const query = { email: user?.email }
+  const result = await userCollection.findOne(query)
+  if (!result || result?.role !== 'Participants')
+    return res.status(401).send({ message: 'unauthorized access' })
+  next()
+}
+const verifyOrganizers = async (req, res, next) => {
+  const user = req.user
+  console.log('user from verify Organizers', user)
+  const query = { email: user?.email }
+  const result = await userCollection.findOne(query)
+  if (!result || result?.role !== 'Organizers')
+    return res.status(401).send({ message: 'unauthorized access' })
+  next()
+}
+const verifyHealthcareProfessionals = async (req, res, next) => {
+  const user = req.user
+  console.log('user from verify Healthcare-Professionals', user)
+  const query = { email: user?.email }
+  const result = await userCollection.findOne(query)
+  if (!result || result?.role !== 'Healthcare-Professionals')
+    return res.status(401).send({ message: 'unauthorized access' })
+  next()
+}
 
 //Camp related API
 //public API
