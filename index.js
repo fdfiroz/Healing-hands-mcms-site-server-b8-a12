@@ -57,6 +57,7 @@ const userCollection = database.collection("userCollection");
 const campCollection = database.collection("campCollection");
 const paymentCollection = database.collection("paymentCollection");
 const registerCampCollection = database.collection("registerCampCollection");
+const feedbackCollection = database.collection("feedbackCollection");
 
   
 
@@ -89,7 +90,7 @@ app.post("/api/v1/auth/logout", async (req, res) => {
 });
 
 //Camp related API
-
+//public API
 // Filtering API Format
 //http://Localhost:5000/api/v1/camps  situation 1
 //http://localhost:5000/api/v1/camps?specialServices=General-Health-Checkups  situation2
@@ -120,6 +121,7 @@ app.get("/api/v1/camps", async (req, res) => {
     console.log(error)
   }
 });
+//All login user
 app.get("/api/v1/camps/:id", async (req, res) => {
   try{
     const id = req.params.id;
@@ -163,6 +165,19 @@ app.patch('/api/v1/cancel-register/:id', async (req, res) => {
   }
 });
 
+//show all confirmed register camp by user email
+app.get("/api/v1/confirmed-register-camps/:email", async (req, res) => {
+  try{
+    const email = req.params.email;
+    const paymentStatus = "Paid"
+    const result =  registerCampCollection.find({ registerEmail: email, paymentStatus: paymentStatus });
+    const data = await result.toArray();
+    res.send(data);
+  }
+  catch(error){
+    console.log(error)
+  }
+});
 
 app.post("/api/v1/add-camps", async (req, res) => {
   try{
@@ -199,6 +214,19 @@ app.put("/api/v1/update-camp/:id", async (req, res) => {
     console.log(error)
   }
 });
+
+//Feedback related API
+app.post("/api/v1/add-feedback", async (req, res) => {
+  try{
+    const feedback = req.body;
+    const result = await feedbackCollection.insertOne(feedback);
+    res.send(result);
+  }
+  catch(error){
+    console.log(error)
+  }
+});
+
 
 //Register Camp related API
 app.post("/api/v1/register-camp", async (req, res) => {
@@ -301,10 +329,11 @@ app.post("/api/v1/save-payment", async (req,res)=>{
   }
 });
 //Show all payment info by user email
-app.get("/api/v1/payment/:email", async (req, res)=>{
+app.get("/api/v1/payments/:email", async (req, res)=>{
   try{
     const payerEmail = req.params.email
-    const result = paymentCollection.find({email})
+
+    const result = paymentCollection.find({payerEmail})
     const data = await result.toArray();
     res.send(data)
   }
