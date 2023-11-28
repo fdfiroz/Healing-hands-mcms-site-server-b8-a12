@@ -136,7 +136,7 @@ const verifyHealthcareProfessionals = async (req, res, next) => {
 // Filtering API Format
 //http://Localhost:5000/api/v1/camps  situation 1
 //http://localhost:5000/api/v1/camps?specialServices=General-Health-Checkups  situation2
-//http:///Localhost:5000/ap1/v1/camps?sortField=dateCreated&sortOrder=desc
+//http:///localhost:5000/api/v1/camps?sortField=popularCount&sortOrder=desc
 //http://localhost:5000/api/v1/camps?search=home  Search API Format
 app.get("/api/v1/camps", async (req, res) => {
   try{
@@ -164,7 +164,7 @@ app.get("/api/v1/camps", async (req, res) => {
   }
 });
 //All login user
-app.get("/api/v1/camps/:id", async (req, res) => {
+app.get("/api/v1/camps/:id", verify, async (req, res) => {
   try{
     const id = req.params.id;
     console.log(id)
@@ -175,17 +175,74 @@ app.get("/api/v1/camps/:id", async (req, res) => {
     console.log(error)
   }
 });
+app.get("/api/v1/get-camps/:orgId", verify, verifyOrganizers, async (req, res) => {
+  try{
+    const orgId = req.params.orgId;
+    console.log(orgId)
+    const result = await campCollection.find({orgId: orgId}).toArray()
+    res.send(result);
+  }
+  catch(error){
+    console.log(error)
+  }
+});
 
-app.patch('/api/v1/status-change/:id', async (req, res) => {
+//update camp 
+app.patch("/api/v1/update-camp/:id", verify, verifyOrganizers, async (req, res) => {
+  try{
+    const id = req.params.id;
+    const camp = req.body;
+    const result = await campCollection.updateOne(
+      { _id: new ObjectId(id) },
+      { $set: camp }
+    );
+    res.send(result);
+  }
+  catch(error){
+    console.log(error)
+  }
+});
+
+app.delete("/api/v1/delete-camp/:id", verify, verifyOrganizers, async (req, res) => {
+  try{
+    const id = req.params.id;
+    const result = await campCollection.deleteOne({ _id: new ObjectId(id)});
+    res.send(result);
+  }
+  catch(error){
+    console.log(error)
+  }
+});
+
+// app.put("/api/v1/update-camp/:id", async (req, res) => {
+//   try{
+//     const id = req.params.id;
+//     const camp = req.body;
+//     const result = await campCollection.updateOne(
+//       { _id: ObjectId(id) },
+//       { $set: camp }
+//     );
+//     res.send(result);
+//   }
+//   catch(error){
+//     console.log(error)
+//   }
+// });
+
+app.patch('/api/v1/status-change/:id', verify, async (req, res) => {
   try {
     const id = req.params.id;
     const paymentStatus = req.body.paymentStatus;
     const registerStatus = req.body.registerStatus;
     const transactionId = req.body.transactionId;
+    const update = {}
+    if (paymentStatus) update.paymentStatus = paymentStatus
+    if (registerStatus) update.registerStatus = registerStatus
+    if (transactionId) update.transactionId = transactionId
     console.log(id, paymentStatus, registerStatus, transactionId)
     const result = await registerCampCollection.updateOne(
       { _id: new ObjectId(id) }, 
-      { $set: { paymentStatus: paymentStatus, registerStatus: registerStatus, transactionId: transactionId } }
+      { $set: update }
     );
     res.send(result);
   } catch (error) {
@@ -193,7 +250,7 @@ app.patch('/api/v1/status-change/:id', async (req, res) => {
   }
 });
 //Cancel register and registerStatus change to Canceled
-app.patch('/api/v1/cancel-register/:id', async (req, res) => {
+app.patch('/api/v1/cancel-register/:id', verify, async (req, res) => {
   try {
     const id = req.params.id;
     const registerStatus = req.body.registerStatus;
@@ -207,8 +264,103 @@ app.patch('/api/v1/cancel-register/:id', async (req, res) => {
   }
 });
 
+//get popular camps by popularCount and sorting fetature by params
+
+
+
+
+
+
+
+
+
+app.post("/api/v1/add-camps", verify, verifyOrganizers, async (req, res) => {
+  try{
+    const camp = req.body;
+    const result = await campCollection.insertOne(camp);
+    res.send(result);
+  }
+  catch(error){
+    console.log(error)
+  }
+});
+
+
+//Feedback related API
+app.post("/api/v1/add-feedback", verify, async (req, res) => {
+  try{
+    const feedback = req.body;
+    const result = await feedbackCollection.insertOne(feedback);
+    res.send(result);
+  }
+  catch(error){
+    console.log(error)
+  }
+});
+
+//Public API
+app.get("/api/v1/feedbacks", async (req, res) => {
+  try{
+    const result = await feedbackCollection.find({}).toArray();
+    res.send(result);
+  }
+  catch(error){
+    console.log(error)
+  }
+});
+
+
+//Register Camp related API
+app.post("/api/v1/register-camp", verify, async (req, res) => {
+  try{
+    const registerCamp = req.body;
+    const result = await registerCampCollection.insertOne(registerCamp);
+    res.send(result);
+  }
+  catch(error){
+    console.log(error)
+  }
+});
+app.get("/api/v1/register-camps/:email", verify, async (req, res) => {
+  try{
+    const email = req.params.email;
+    const result =  registerCampCollection.find({ registerEmail: email });
+    const data = await result.toArray();
+    res.send(data);
+  }
+  catch(error){
+    console.log(error)
+  }
+});
+
+//Get register camp by orgId
+app.get("/api/v1/register-camps/org/:orgId", verify, async (req, res) => {
+  try{
+    const orgId = req.params.orgId;
+    console.log(req.params)
+    const result =  registerCampCollection.find({ orgId: orgId });
+    const data = await result.toArray();
+    res.send(data);
+  }
+  catch(error){
+    console.log(error)
+  }
+});
+
+app.get("/api/v1/register-camp:id", async (req, res) => {
+  try{
+    console.log(req)
+    const id = req.params.id;
+    const result = await registerCampCollection.findOne({ _id: new ObjectId(id) });
+    res.send(id);
+  }
+  catch(error){
+    console.log(error)
+  }
+});
+
 //show all confirmed register camp by user email
-app.get("/api/v1/confirmed-register-camps/:email", async (req, res) => {
+app.get("/api/v1/confirmed-register-camps/:email", verify, async (req, res) => {
   try{
     const email = req.params.email;
     const paymentStatus = "Paid"
@@ -221,114 +373,19 @@ app.get("/api/v1/confirmed-register-camps/:email", async (req, res) => {
   }
 });
 
-app.post("/api/v1/add-camps", async (req, res) => {
-  try{
-    const camp = req.body;
-    const result = await campCollection.insertOne(camp);
-    res.send(result);
-  }
-  catch(error){
-    console.log(error)
-  }
-});
-app.delete("/api/v1/delete-camp/:id", async (req, res) => {
-  try{
-    const id = req.params.id;
-    const result = await campCollection.deleteOne({ _id: ObjectId(id) });
-    res.send(result);
-  }
-  catch(error){
-    console.log(error)
-  }
-});
-
-app.put("/api/v1/update-camp/:id", async (req, res) => {
-  try{
-    const id = req.params.id;
-    const camp = req.body;
-    const result = await campCollection.updateOne(
-      { _id: ObjectId(id) },
-      { $set: camp }
-    );
-    res.send(result);
-  }
-  catch(error){
-    console.log(error)
-  }
-});
-
-//Feedback related API
-app.post("/api/v1/add-feedback", async (req, res) => {
-  try{
-    const feedback = req.body;
-    const result = await feedbackCollection.insertOne(feedback);
-    res.send(result);
-  }
-  catch(error){
-    console.log(error)
-  }
-});
-
-
-//Register Camp related API
-app.post("/api/v1/register-camp", async (req, res) => {
-  try{
-    const registerCamp = req.body;
-    const result = await registerCampCollection.insertOne(registerCamp);
-    res.send(result);
-  }
-  catch(error){
-    console.log(error)
-  }
-});
-app.get("/api/v1/register-camps/:email", async (req, res) => {
-  try{
-    const email = req.params.email;
-    const result =  registerCampCollection.find({ registerEmail: email });
-    const data = await result.toArray();
-    res.send(data);
-  }
-  catch(error){
-    console.log(error)
-  }
-});
-app.get("/api/v1/register-camp:id", async (req, res) => {
-  try{
-    console.log(req)
-    const id = req.params.id;
-    const result = await registerCampCollection.findOne({ _id: new ObjectId(id) });
-    res.send(id);
-  }
-  catch(error){
-    console.log(error)
-  }
-});
-app.delete("/api/v1/delete-register-camp/:id", async(req, res) => {
-  try{
-    const id = req.params.id;
-    const result = await registerCampCollection.deleteOne({ _id: ObjectId(id) });
-    res.send(result);
-  }
-  catch(error){
-    console.log(error)
-  }
-});
-
-//find all register camp by registerEmail or orgId
-
 
 
 
 
 // User related API
-app.post("/api/v1/users", async (req, res) =>{
+app.post("/api/v1/users", verify, async (req, res) =>{
   const user = req.body;
   console.log(user)
   const result = await userCollection.insertOne(user);
   res.send(result);
 })
 
-app.get("/api/v1/users/role/:email", async (req, res) => {
+app.get("/api/v1/users/role/:email", verify, async (req, res) => {
 try{
   const email = req.params.email
   const result = await userCollection.findOne({email})
@@ -340,7 +397,7 @@ catch(error){
 });
 
 //Generate Payment Intent
-app.post("/api/v1/create-payment-intent",  async (req, res)=>{
+app.post("/api/v1/create-payment-intent", verify, async (req, res)=>{
   const {fees} = req.body;
   console.log("form front end",fees)
   try{
@@ -359,7 +416,7 @@ app.post("/api/v1/create-payment-intent",  async (req, res)=>{
 })
 
 //Save payment info to database
-app.post("/api/v1/save-payment", async (req,res)=>{
+app.post("/api/v1/save-payment", verify, async (req,res)=>{
   
   try{
     const paymentInfo = req.body;
@@ -371,7 +428,7 @@ app.post("/api/v1/save-payment", async (req,res)=>{
   }
 });
 //Show all payment info by user email
-app.get("/api/v1/payments/:email", async (req, res)=>{
+app.get("/api/v1/payments/:email", verify, async (req, res)=>{
   try{
     const payerEmail = req.params.email
 
@@ -384,7 +441,7 @@ app.get("/api/v1/payments/:email", async (req, res)=>{
   }
 })
 //Update popular camp count
-app.patch("/api/v1/popular-count/:id", async (req, res)=>{
+app.patch("/api/v1/popular-count/:id", verify, async (req, res)=>{
   const id = req.params.id;
   const {popularCount} = req.body;
 
