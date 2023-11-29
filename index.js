@@ -265,7 +265,6 @@ app.patch('/api/v1/cancel-register/:id', verify, async (req, res) => {
   }
 });
 
-//get popular camps by popularCount and sorting fetature by params
 
 
 
@@ -285,13 +284,25 @@ app.post("/api/v1/add-camps", verify, verifyOrganizers, async (req, res) => {
     console.log(error)
   }
 });
-
-
-//Feedback related API
-app.post("/api/v1/add-feedback", verify, verifyParticipants,async (req, res) => {
+app.delete("/api/v1/delete-camp/:id", async (req, res) => {
   try{
-    const feedback = req.body;
-    const result = await feedbackCollection.insertOne(feedback);
+    const id = req.params.id;
+    const result = await campCollection.deleteOne({ _id: ObjectId(id) });
+    res.send(result);
+  }
+  catch(error){
+    console.log(error)
+  }
+});
+
+app.put("/api/v1/update-camp/:id", async (req, res) => {
+  try{
+    const id = req.params.id;
+    const camp = req.body;
+    const result = await campCollection.updateOne(
+      { _id: ObjectId(id) },
+      { $set: camp }
+    );
     res.send(result);
   }
   catch(error){
@@ -302,8 +313,7 @@ app.post("/api/v1/add-feedback", verify, verifyParticipants,async (req, res) => 
 //Public API
 app.get("/api/v1/feedbacks", async (req, res) => {
   try{
-    const feedback = req.body;
-    const result = await feedbackCollection.insertOne(feedback);
+    const result = await feedbackCollection.find({}).toArray();
     res.send(result);
   }
   catch(error){
@@ -385,19 +395,8 @@ app.get("/api/v1/confirmed-register-camps/:email", verify, async (req, res) => {
     console.log(error)
   }
 });
-//show all confirmed register camp by user email
-app.get("/api/v1/confirmed-register-camps/:email", async (req, res) => {
-  try{
-    const email = req.params.email;
-    const paymentStatus = "Paid"
-    const result =  registerCampCollection.find({ registerEmail: email, paymentStatus: paymentStatus });
-    const data = await result.toArray();
-    res.send(data);
-  }
-  catch(error){
-    console.log(error)
-  }
-});
+
+//find all register camp by registerEmail or orgId
 
 
 
