@@ -287,7 +287,7 @@ app.post("/api/v1/add-camps", verify, verifyOrganizers, async (req, res) => {
 
 
 //Feedback related API
-app.post("/api/v1/add-feedback", verify, async (req, res) => {
+app.post("/api/v1/add-feedback", verify, verifyParticipants,async (req, res) => {
   try{
     const feedback = req.body;
     const result = await feedbackCollection.insertOne(feedback);
@@ -378,12 +378,21 @@ app.get("/api/v1/confirmed-register-camps/:email", verify, async (req, res) => {
 
 
 // User related API
-app.post("/api/v1/users", verify, async (req, res) =>{
+app.post("/api/v1/users", async (req, res) =>{
   const user = req.body;
   console.log(user)
   const result = await userCollection.insertOne(user);
   res.send(result);
 })
+
+app.patch("/api/v1/users/:id", verify, async (req, res) => {
+  const id = req.params.id;
+  const user = req.body;
+  console.log(user)
+  const result = await userCollection.updateOne({ _id: new ObjectId(id) }
+  , { $set: user });
+  res.send(result);
+});
 
 app.get("/api/v1/users/role/:email", verify, async (req, res) => {
 try{
