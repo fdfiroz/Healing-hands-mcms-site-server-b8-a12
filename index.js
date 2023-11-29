@@ -137,6 +137,7 @@ const verifyHealthcareProfessionals = async (req, res, next) => {
 //http://Localhost:5000/api/v1/camps  situation 1
 //http://localhost:5000/api/v1/camps?specialServices=General-Health-Checkups  situation2
 //http:///localhost:5000/api/v1/camps?sortField=popularCount&sortOrder=desc
+//http:///localhost:5000/api/v1/camps?sortField=popularCount&sortOrder=desc
 //http://localhost:5000/api/v1/camps?search=home  Search API Format
 app.get("/api/v1/camps", async (req, res) => {
   try{
@@ -301,6 +302,18 @@ app.post("/api/v1/add-feedback", verify, verifyParticipants,async (req, res) => 
 //Public API
 app.get("/api/v1/feedbacks", async (req, res) => {
   try{
+    const feedback = req.body;
+    const result = await feedbackCollection.insertOne(feedback);
+    res.send(result);
+  }
+  catch(error){
+    console.log(error)
+  }
+});
+
+//Public API
+app.get("/api/v1/feedbacks", async (req, res) => {
+  try{
     const result = await feedbackCollection.find({}).toArray();
     res.send(result);
   }
@@ -361,6 +374,19 @@ app.get("/api/v1/register-camp:id", async (req, res) => {
 
 //show all confirmed register camp by user email
 app.get("/api/v1/confirmed-register-camps/:email", verify, async (req, res) => {
+  try{
+    const email = req.params.email;
+    const paymentStatus = "Paid"
+    const result =  registerCampCollection.find({ registerEmail: email, paymentStatus: paymentStatus });
+    const data = await result.toArray();
+    res.send(data);
+  }
+  catch(error){
+    console.log(error)
+  }
+});
+//show all confirmed register camp by user email
+app.get("/api/v1/confirmed-register-camps/:email", async (req, res) => {
   try{
     const email = req.params.email;
     const paymentStatus = "Paid"
