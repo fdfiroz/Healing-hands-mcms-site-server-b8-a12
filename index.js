@@ -9,7 +9,10 @@ const morgan = require('morgan')
 const port = process.env.PORT || 5000
 const stripe = require('stripe')(process.env.PAYMENT_SECRET_KEY)
 const corsOptions = {
-    origin: ['http://localhost:5173', 'http://localhost:5174'],
+    origin: ['http://localhost:5173', 
+    'http://localhost:5174', 
+    'https://mcms-b8a12.web.app', 
+    'https://mcms-b8a12.firebaseapp.com'],
     credentials: true,
     optionSuccessStatus: 200,
   }
@@ -215,20 +218,6 @@ app.delete("/api/v1/delete-camp/:id", verify, verifyOrganizers, async (req, res)
   }
 });
 
-// app.put("/api/v1/update-camp/:id", async (req, res) => {
-//   try{
-//     const id = req.params.id;
-//     const camp = req.body;
-//     const result = await campCollection.updateOne(
-//       { _id: ObjectId(id) },
-//       { $set: camp }
-//     );
-//     res.send(result);
-//   }
-//   catch(error){
-//     console.log(error)
-//   }
-// });
 
 app.patch('/api/v1/status-change/:id', verify, async (req, res) => {
   try {
@@ -284,7 +273,7 @@ app.post("/api/v1/add-camps", verify, verifyOrganizers, async (req, res) => {
     console.log(error)
   }
 });
-app.delete("/api/v1/delete-camp/:id", async (req, res) => {
+app.delete("/api/v1/delete-camp/:id", verify, verifyOrganizers, async (req, res) => {
   try{
     const id = req.params.id;
     const result = await campCollection.deleteOne({ _id: ObjectId(id) });
@@ -295,31 +284,8 @@ app.delete("/api/v1/delete-camp/:id", async (req, res) => {
   }
 });
 
-app.put("/api/v1/update-camp/:id", async (req, res) => {
-  try{
-    const id = req.params.id;
-    const camp = req.body;
-    const result = await campCollection.updateOne(
-      { _id: ObjectId(id) },
-      { $set: camp }
-    );
-    res.send(result);
-  }
-  catch(error){
-    console.log(error)
-  }
-});
 
-//Public API
-app.get("/api/v1/feedbacks", async (req, res) => {
-  try{
-    const result = await feedbackCollection.find({}).toArray();
-    res.send(result);
-  }
-  catch(error){
-    console.log(error)
-  }
-});
+
 
 //Public API
 app.get("/api/v1/feedbacks", async (req, res) => {
@@ -334,7 +300,7 @@ app.get("/api/v1/feedbacks", async (req, res) => {
 
 
 //Register Camp related API
-app.post("/api/v1/register-camp", verify, async (req, res) => {
+app.post("/api/v1/register-camp", verify, verifyParticipants, async (req, res) => {
   try{
     const registerCamp = req.body;
     const result = await registerCampCollection.insertOne(registerCamp);
@@ -344,7 +310,7 @@ app.post("/api/v1/register-camp", verify, async (req, res) => {
     console.log(error)
   }
 });
-app.get("/api/v1/register-camps/:email", verify, async (req, res) => {
+app.get("/api/v1/register-camps/:email", verify, verifyParticipants, async (req, res) => {
   try{
     const email = req.params.email;
     const result =  registerCampCollection.find({ registerEmail: email });
@@ -357,7 +323,7 @@ app.get("/api/v1/register-camps/:email", verify, async (req, res) => {
 });
 
 //Get register camp by orgId
-app.get("/api/v1/register-camps/org/:orgId", verify, async (req, res) => {
+app.get("/api/v1/register-camps/org/:orgId", verify, verifyOrganizers, async (req, res) => {
   try{
     const orgId = req.params.orgId;
     console.log(req.params)
@@ -370,20 +336,20 @@ app.get("/api/v1/register-camps/org/:orgId", verify, async (req, res) => {
   }
 });
 
-app.get("/api/v1/register-camp:id", async (req, res) => {
-  try{
-    console.log(req)
-    const id = req.params.id;
-    const result = await registerCampCollection.findOne({ _id: new ObjectId(id) });
-    res.send(id);
-  }
-  catch(error){
-    console.log(error)
-  }
-});
+// app.get("/api/v1/register-camp:id", async (req, res) => {
+//   try{
+//     console.log(req)
+//     const id = req.params.id;
+//     const result = await registerCampCollection.findOne({ _id: new ObjectId(id) });
+//     res.send(id);
+//   }
+//   catch(error){
+//     console.log(error)
+//   }
+// });
 
 //show all confirmed register camp by user email
-app.get("/api/v1/confirmed-register-camps/:email", verify, async (req, res) => {
+app.get("/api/v1/confirmed-register-camps/:email", verify, verifyParticipants, async (req, res) => {
   try{
     const email = req.params.email;
     const paymentStatus = "Paid"
@@ -431,7 +397,7 @@ catch(error){
 });
 
 //Generate Payment Intent
-app.post("/api/v1/create-payment-intent", verify, async (req, res)=>{
+app.post("/api/v1/create-payment-intent", verify, verifyParticipants, async (req, res)=>{
   const {fees} = req.body;
   console.log("form front end",fees)
   try{
@@ -450,7 +416,7 @@ app.post("/api/v1/create-payment-intent", verify, async (req, res)=>{
 })
 
 //Save payment info to database
-app.post("/api/v1/save-payment", verify, async (req,res)=>{
+app.post("/api/v1/save-payment", verify, verifyParticipants, async (req,res)=>{
   
   try{
     const paymentInfo = req.body;
@@ -462,7 +428,7 @@ app.post("/api/v1/save-payment", verify, async (req,res)=>{
   }
 });
 //Show all payment info by user email
-app.get("/api/v1/payments/:email", verify, async (req, res)=>{
+app.get("/api/v1/payments/:email", verify, verifyParticipants, async (req, res)=>{
   try{
     const payerEmail = req.params.email
 
@@ -475,7 +441,7 @@ app.get("/api/v1/payments/:email", verify, async (req, res)=>{
   }
 })
 //Update popular camp count
-app.patch("/api/v1/popular-count/:id", verify, async (req, res)=>{
+app.patch("/api/v1/popular-count/:id", verify, verifyParticipants, async (req, res)=>{
   const id = req.params.id;
   const {popularCount} = req.body;
 
